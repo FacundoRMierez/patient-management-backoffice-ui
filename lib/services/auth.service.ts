@@ -1,4 +1,4 @@
-import { LoginRequest, LoginResponse } from '@/lib/types/auth'
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '@/lib/types/auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -24,8 +24,10 @@ export class AuthService {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Login failed')
+      const errorData = await response.json()
+      // Extract Spanish error message if available
+      const errorMessage = errorData.error?.es || errorData.message || 'Error al iniciar sesión'
+      throw new Error(errorMessage)
     }
 
     const data = await response.json()
@@ -37,6 +39,25 @@ export class AuthService {
     }
 
     return data
+  }
+
+  async register(data: RegisterRequest): Promise<RegisterResponse> {
+    const response = await fetch(`${API_URL}/users/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      // Extract Spanish error message if available
+      const errorMessage = errorData.error?.es || errorData.message || 'Error al registrarse'
+      throw new Error(errorMessage)
+    }
+
+    return await response.json()
   }
 
   async logout(): Promise<void> {

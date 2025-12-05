@@ -1,7 +1,17 @@
 export const siteConfig = {
   name: "Patient Management",
+  shortName: "PM",
   description: "Sistema integral de gestión de pacientes",
+  tagline: "Gestiona tu práctica profesional de forma eficiente y segura",
   version: "1.0.0",
+  year: "2025",
+  support: {
+    email: "soporte@patientmanagement.com",
+  },
+  links: {
+    terms: "/terms",
+    privacy: "/privacy",
+  },
 }
 
 export const navigationConfig = {

@@ -24,11 +24,31 @@ export interface LoginRequest {
   password: string
 }
 
+export interface RegisterRequest {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  organizationName: string
+  address: string
+  phoneNumber: string
+  professionalType: 'PSYCHOLOGIST' | 'PSYCHIATRIST' | 'THERAPIST' | 'OTHER'
+  licenseNumber: string
+  specialization: string
+}
+
 export interface LoginResponse {
   message: string
   data: {
     user: User
     token: string
+  }
+}
+
+export interface RegisterResponse {
+  message: string
+  data: {
+    user: Omit<User, 'roles'>
   }
 }
 
