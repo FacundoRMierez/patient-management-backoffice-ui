@@ -34,6 +34,12 @@ interface MenuItem {
 export function Sidebar({ isCollapsed, onToggle, isMobile = false }: SidebarProps) {
   const pathname = usePathname()
 
+  const handleLinkClick = () => {
+    if (isMobile && !isCollapsed) {
+      onToggle()
+    }
+  }
+
   // Convert navigation config to menu items with icons
   const menuItems: MenuItem[] = [
     {
@@ -113,6 +119,7 @@ export function Sidebar({ isCollapsed, onToggle, isMobile = false }: SidebarProp
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleLinkClick}
               className={cn(
                 "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
