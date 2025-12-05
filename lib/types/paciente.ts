@@ -20,9 +20,19 @@ export interface SchoolData {
   observations?: string
 }
 
+export interface BillingData {
+  requiresInvoice: boolean
+  businessName?: string
+  taxId?: string // CUIT/CUIL
+  fiscalAddress?: string
+  fiscalCondition?: 'RESPONSABLE_INSCRIPTO' | 'MONOTRIBUTISTA' | 'CONSUMIDOR_FINAL' | 'EXENTO'
+  email?: string
+}
+
 export interface Patient {
   id: string
   documentId: string
+  cut?: string
   firstName: string
   lastName: string
   birthDate: Date
@@ -41,6 +51,9 @@ export interface Patient {
   // School Data
   schoolData?: SchoolData
   
+  // Billing Data
+  billingData?: BillingData
+  
   // Metadata
   registrationDate: Date
   lastUpdate: Date
@@ -50,6 +63,7 @@ export interface Patient {
 export interface PatientFormData {
   // Step 1: Personal Data
   documentId: string
+  cut?: string
   firstName: string
   lastName: string
   birthDate: string
@@ -87,6 +101,14 @@ export interface PatientFormData {
   schoolLocation?: string
   grade?: string
   observations?: string
+  
+  // Step 6: Billing Data
+  requiresInvoice: boolean
+  billingBusinessName?: string
+  billingTaxId?: string
+  billingFiscalAddress?: string
+  billingFiscalCondition?: 'RESPONSABLE_INSCRIPTO' | 'MONOTRIBUTISTA' | 'CONSUMIDOR_FINAL' | 'EXENTO'
+  billingEmail?: string
 }
 
 export interface PatientFilters {

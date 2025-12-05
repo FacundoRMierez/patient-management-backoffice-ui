@@ -43,7 +43,15 @@ export function PacientesList({ patients, onEdit, onDelete }: PatientsListProps)
                 <h3 className="font-semibold text-gray-900 text-sm truncate">
                   {patient.lastName}, {patient.firstName}
                 </h3>
-                <p className="text-xs text-gray-500">DNI: {patient.documentId}</p>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span>DNI: {patient.documentId}</span>
+                  {patient.cut && (
+                    <>
+                      <span>•</span>
+                      <span>CUT: {patient.cut}</span>
+                    </>
+                  )}
+                </div>
               </div>
               <Badge variant={patient.active ? "success" : "secondary"} className="text-xs shrink-0">
                 {patient.active ? "Activo" : "Inactivo"}

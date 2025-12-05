@@ -28,19 +28,18 @@ export function PersonalDataStep({ formData, onChange, errors }: PersonalDataSte
         </div>
 
         <div>
-          <Label htmlFor="birthDate">
-            Fecha de Nacimiento <span className="text-red-500">*</span>
+          <Label htmlFor="cut">
+            CUT (Código Único de Tramitación)
           </Label>
           <Input
-            id="birthDate"
-            type="date"
-            value={formData.birthDate || ""}
-            onChange={(e) => onChange("birthDate", e.target.value)}
-            className={errors.birthDate ? "border-red-500" : ""}
+            id="cut"
+            type="text"
+            placeholder="CUT-12345"
+            value={formData.cut || ""}
+            onChange={(e) => onChange("cut", e.target.value)}
+            className={errors.cut ? "border-red-500" : ""}
           />
-          {errors.birthDate && (
-            <p className="mt-1 text-xs text-red-500">{errors.birthDate}</p>
-          )}
+          {errors.cut && <p className="mt-1 text-xs text-red-500">{errors.cut}</p>}
         </div>
       </div>
 
@@ -74,6 +73,22 @@ export function PersonalDataStep({ formData, onChange, errors }: PersonalDataSte
           />
           {errors.lastName && <p className="mt-1 text-xs text-red-500">{errors.lastName}</p>}
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="birthDate">
+          Fecha de Nacimiento <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="birthDate"
+          type="date"
+          value={formData.birthDate || ""}
+          onChange={(e) => onChange("birthDate", e.target.value)}
+          className={errors.birthDate ? "border-red-500" : ""}
+        />
+        {errors.birthDate && (
+          <p className="mt-1 text-xs text-red-500">{errors.birthDate}</p>
+        )}
       </div>
 
       <div>

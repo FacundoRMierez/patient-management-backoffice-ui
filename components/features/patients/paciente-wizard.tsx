@@ -6,6 +6,7 @@ import { PersonalDataStep } from "./wizard-steps/personal-data-step"
 import { HealthInsuranceStep } from "./wizard-steps/health-insurance-step"
 import { ParentsStep } from "./wizard-steps/parents-step"
 import { SchoolDataStep } from "./wizard-steps/school-data-step"
+import { BillingDataStep } from "./wizard-steps/billing-data-step"
 import type { PatientFormData } from "@/lib/types/paciente"
 
 const WIZARD_STEPS = [
@@ -29,6 +30,11 @@ const WIZARD_STEPS = [
     title: "Datos Escolares",
     description: "Información educativa (opcional)",
   },
+  {
+    id: 5,
+    title: "Facturación",
+    description: "Datos fiscales (opcional)",
+  },
 ]
 
 interface PatientWizardProps {
@@ -50,6 +56,7 @@ export function PatientWizard({
       hasInsurance: false,
       hasParentB: false,
       hasSchool: false,
+      requiresInvoice: false,
       legalGuardian: 'A',
     }
   )
@@ -97,6 +104,15 @@ export function PatientWizard({
           if (!formData.schoolName?.trim()) newErrors.schoolName = "Required"
           if (!formData.schoolLocation?.trim()) newErrors.schoolLocation = "Required"
           if (!formData.grade?.trim()) newErrors.grade = "Required"
+        }
+        break
+
+      case 4: // Billing Data
+        if (formData.requiresInvoice) {
+          if (!formData.billingBusinessName?.trim()) newErrors.billingBusinessName = "Required"
+          if (!formData.billingTaxId?.trim()) newErrors.billingTaxId = "Required"
+          if (!formData.billingFiscalAddress?.trim()) newErrors.billingFiscalAddress = "Required"
+          if (!formData.billingFiscalCondition) newErrors.billingFiscalCondition = "Required"
         }
         break
     }
@@ -152,6 +168,14 @@ export function PatientWizard({
       case 3:
         return (
           <SchoolDataStep
+            formData={formData}
+            onChange={handleChange}
+            errors={errors}
+          />
+        )
+      case 4:
+        return (
+          <BillingDataStep
             formData={formData}
             onChange={handleChange}
             errors={errors}

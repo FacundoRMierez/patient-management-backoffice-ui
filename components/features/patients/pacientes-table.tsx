@@ -41,6 +41,9 @@ export function PacientesTable({ patients, onEdit, onDelete }: PatientsTableProp
                 DNI
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                CUT
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                 Paciente
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -65,6 +68,9 @@ export function PacientesTable({ patients, onEdit, onDelete }: PatientsTableProp
               <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                   {patient.documentId}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  {patient.cut || '-'}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex flex-col">
