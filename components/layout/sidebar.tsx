@@ -10,8 +10,10 @@ import {
   Home,
   ChevronLeft,
   ChevronRight,
+  LogOut,
   type LucideIcon
 } from "lucide-react"
+import { useAuth } from "@/contexts/auth-context"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
 import type { SidebarProps } from "@/lib/types"
@@ -33,11 +35,17 @@ interface MenuItem {
 
 export function Sidebar({ isCollapsed, onToggle, isMobile = false }: SidebarProps) {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
 
   const handleLinkClick = () => {
     if (isMobile && !isCollapsed) {
       onToggle()
     }
+  }
+
+  const getInitials = (firstName?: string, lastName?: string) => {
+    if (!firstName && !lastName) return 'U'
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase()
   }
 
   // Convert navigation config to menu items with icons
@@ -147,12 +155,14 @@ export function Sidebar({ isCollapsed, onToggle, isMobile = false }: SidebarProp
       <div className="border-t border-gray-200 p-4">
         <div
           className={cn(
-            "flex items-center",
+            "flex items-center mb-2",
             isCollapsed ? "justify-center" : "space-x-3"
           )}
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-            <span className="text-sm font-medium text-gray-700">U</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 flex-shrink-0">
+            <span className="text-xs font-medium text-white">
+              {getInitials(user?.firstName, user?.lastName)}
+            </span>
           </div>
           <div
             className={cn(
@@ -160,10 +170,32 @@ export function Sidebar({ isCollapsed, onToggle, isMobile = false }: SidebarProp
               isCollapsed ? "w-0 opacity-0" : "w-auto opacity-100"
             )}
           >
-            <p className="text-sm font-medium text-gray-900">Usuario</p>
-            <p className="text-xs text-gray-500">usuario@ejemplo.com</p>
+            <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.firstName} {user?.lastName}
+            </p>
+            <p className="text-xs text-gray-500 truncate">{user?.email}</p>
           </div>
         </div>
+        
+        {!isCollapsed && (
+          <button
+            onClick={logout}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Cerrar Sesión
+          </button>
+        )}
+        
+        {isCollapsed && (
+          <button
+            onClick={logout}
+            className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-red-600 hover:bg-red-50 transition-colors"
+            title="Cerrar Sesión"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </aside>
   )
