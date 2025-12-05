@@ -140,7 +140,9 @@ export function Wizard({
             <Button onClick={onSubmit} disabled={!isValid} className="flex-1 sm:flex-none">
               <Check className="mr-1 sm:mr-2 h-4 w-4" />
               <span className="hidden sm:inline">{submitLabel}</span>
-              <span className="sm:hidden text-xs">Crear</span>
+              <span className="sm:hidden text-xs">
+                {submitLabel.includes('Guardar') ? 'Guardar' : 'Crear'}
+              </span>
             </Button>
           ) : (
             <Button onClick={onNext} disabled={!isValid} className="flex-1 sm:flex-none">

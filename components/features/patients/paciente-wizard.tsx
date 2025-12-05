@@ -186,6 +186,8 @@ export function PatientWizard({
       onSubmit={handleSubmit}
       isLastStep={currentStep === WIZARD_STEPS.length - 1}
       isValid={Object.keys(errors).length === 0}
+      title={mode === 'edit' ? 'Editar Paciente' : 'Crear Paciente'}
+      submitLabel={mode === 'edit' ? 'Guardar Cambios' : 'Crear Paciente'}
     >
       {renderStepContent()}
     </Wizard>
