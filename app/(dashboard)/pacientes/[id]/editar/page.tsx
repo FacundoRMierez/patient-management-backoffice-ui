@@ -6,14 +6,17 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs"
 import { PatientWizard } from "@/components/features/patients/paciente-wizard"
 import { PatientService } from "@/lib/services/patient.service"
 import type { PatientFormData } from "@/lib/types/paciente"
+import { useToast, ToastContainer } from "@/components/ui/toast"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
 
 export default function EditarPacientePage() {
   const router = useRouter()
   const params = useParams()
   const patientId = params.id as string
+  const { toasts, success, error: showError, closeToast } = useToast()
   const [initialData, setInitialData] = useState<Partial<PatientFormData> | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
@@ -23,7 +26,6 @@ export default function EditarPacientePage() {
   const loadPatient = async () => {
     try {
       setLoading(true)
-      setError(null)
       const patientService = PatientService.getInstance()
       const patient = await patientService.getPatientById(patientId)
       
@@ -31,7 +33,10 @@ export default function EditarPacientePage() {
       const formData = patientService.convertPatientToFormData(patient)
       setInitialData(formData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al cargar paciente')
+      showError(
+        'Error al cargar paciente',
+        err instanceof Error ? err.message : 'No se pudieron cargar los datos del paciente'
+      )
     } finally {
       setLoading(false)
     }
@@ -40,15 +45,24 @@ export default function EditarPacientePage() {
   const handleUpdatePatient = async (formData: PatientFormData, mode: 'create' | 'edit') => {
     try {
       setIsSubmitting(true)
-      setError(null)
       
       const patientService = PatientService.getInstance()
       await patientService.updatePatient(patientId, formData)
       
-      // Redirigir a la lista de pacientes
-      router.push("/pacientes")
+      success(
+        'Cambios guardados',
+        `Los datos de ${formData.firstName} ${formData.lastName} han sido actualizados`
+      )
+      
+      // Pequeño delay para que se vea el toast antes de navegar
+      setTimeout(() => {
+        router.push("/pacientes")
+      }, 800)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar paciente')
+      showError(
+        'Error al actualizar',
+        err instanceof Error ? err.message : 'No se pudieron guardar los cambios'
+      )
       setIsSubmitting(false)
     }
   }
@@ -59,6 +73,41 @@ export default function EditarPacientePage() {
 
   if (loading || !initialData) {
     return (
+      <>
+        <ToastContainer toasts={toasts} onClose={closeToast} />
+        
+        <div className="space-y-4 sm:space-y-6">
+          <Breadcrumbs
+            items={[
+              { label: "Pacientes", href: "/pacientes" },
+              { label: "Editar Paciente" },
+            ]}
+          />
+          <Card className="p-6">
+            <div className="space-y-6">
+              <div>
+                <Skeleton className="h-8 w-1/3 mb-2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <ToastContainer toasts={toasts} onClose={closeToast} />
+      
       <div className="space-y-4 sm:space-y-6">
         <Breadcrumbs
           items={[
@@ -66,42 +115,14 @@ export default function EditarPacientePage() {
             { label: "Editar Paciente" },
           ]}
         />
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Cargando datos del paciente...</p>
-          </div>
-        </div>
+        
+        <PatientWizard
+          mode="edit"
+          initialData={initialData}
+          onClose={handleCancel}
+          onSuccess={handleUpdatePatient}
+        />
       </div>
-    )
-  }
-
-  return (
-    <div className="space-y-4 sm:space-y-6">
-      <Breadcrumbs
-        items={[
-          { label: "Pacientes", href: "/pacientes" },
-          { label: "Editar Paciente" },
-        ]}
-      />
-      
-      {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-          <div className="flex items-center space-x-3">
-            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <p className="text-sm text-red-700">{error}</p>
-          </div>
-        </div>
-      )}
-      
-      <PatientWizard
-        mode="edit"
-        initialData={initialData}
-        onClose={handleCancel}
-        onSuccess={handleUpdatePatient}
-      />
-    </div>
+    </>
   )
 }

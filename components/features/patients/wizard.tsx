@@ -49,23 +49,23 @@ export function Wizard({
       </div>
 
       {/* Progress Steps */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6 shadow-sm">
         <div className="flex items-center justify-between">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center flex-1">
               <div className="flex flex-col items-center flex-1">
                 <div
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors",
+                    "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300",
                     index < currentStep
-                      ? "border-blue-600 bg-blue-600 text-white"
+                      ? "border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-200"
                       : index === currentStep
-                      ? "border-blue-600 bg-white text-blue-600"
+                      ? "border-blue-600 bg-white text-blue-600 ring-4 ring-blue-100"
                       : "border-gray-300 bg-white text-gray-400"
                   )}
                 >
                   {index < currentStep ? (
-                    <Check className="h-5 w-5" />
+                    <Check className="h-5 w-5 animate-in zoom-in" />
                   ) : (
                     <span className="text-sm font-semibold">{index + 1}</span>
                   )}
@@ -73,7 +73,7 @@ export function Wizard({
                 <div className="mt-2 text-center hidden sm:block">
                   <p
                     className={cn(
-                      "text-xs font-medium",
+                      "text-xs font-medium transition-colors duration-300",
                       index <= currentStep ? "text-gray-900" : "text-gray-500"
                     )}
                   >
@@ -92,7 +92,7 @@ export function Wizard({
               {index < steps.length - 1 && (
                 <div
                   className={cn(
-                    "h-0.5 flex-1 max-w-[60px] sm:max-w-[80px] transition-colors mx-1 sm:mx-2",
+                    "h-0.5 flex-1 max-w-[60px] sm:max-w-[80px] transition-all duration-300 mx-1 sm:mx-2",
                     index < currentStep ? "bg-blue-600" : "bg-gray-300"
                   )}
                 />
@@ -103,7 +103,7 @@ export function Wizard({
       </div>
 
       {/* Content */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4">
         <div className="mb-4 sm:mb-6">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">
             {steps[currentStep].title}
@@ -116,11 +116,11 @@ export function Wizard({
       </div>
 
       {/* Footer */}
-      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 rounded-lg border border-gray-200 bg-white p-3 sm:px-6 sm:py-4">
+      <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 rounded-lg border border-gray-200 bg-white p-3 sm:px-6 sm:py-4 shadow-sm">
         <Button
           variant="ghost"
           onClick={onClose}
-          className="w-full sm:w-auto"
+          className="w-full sm:w-auto hover:bg-red-50 hover:text-red-700 transition-colors"
         >
           Cancelar
         </Button>
@@ -130,14 +130,18 @@ export function Wizard({
             variant="outline"
             onClick={onPrev}
             disabled={currentStep === 0}
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none hover:scale-105 transition-transform disabled:scale-100"
           >
             <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Anterior</span>
             <span className="sm:hidden text-xs">Atrás</span>
           </Button>
           {isLastStep ? (
-            <Button onClick={onSubmit} disabled={!isValid} className="flex-1 sm:flex-none">
+            <Button 
+              onClick={onSubmit} 
+              disabled={!isValid} 
+              className="flex-1 sm:flex-none hover:scale-105 transition-transform disabled:scale-100 disabled:opacity-50"
+            >
               <Check className="mr-1 sm:mr-2 h-4 w-4" />
               <span className="hidden sm:inline">{submitLabel}</span>
               <span className="sm:hidden text-xs">
@@ -145,7 +149,11 @@ export function Wizard({
               </span>
             </Button>
           ) : (
-            <Button onClick={onNext} disabled={!isValid} className="flex-1 sm:flex-none">
+            <Button 
+              onClick={onNext} 
+              disabled={!isValid} 
+              className="flex-1 sm:flex-none hover:scale-105 transition-transform disabled:scale-100 disabled:opacity-50"
+            >
               <span className="hidden sm:inline">Siguiente</span>
               <span className="sm:hidden text-xs">Continuar</span>
               <ChevronRight className="ml-1 sm:ml-2 h-4 w-4" />

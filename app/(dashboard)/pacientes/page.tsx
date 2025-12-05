@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { UserPlus, Search, Users, UserCheck, Calendar, TrendingUp, Filter, Download, Grid3x3, List, Loader2 } from "lucide-react"
+import { UserPlus, Search, Users, UserCheck, Calendar, TrendingUp, Filter, Download, Grid3x3, List, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -11,9 +11,14 @@ import { PacientesList } from "@/components/features/patients/pacientes-list"
 import { Pagination } from "@/components/features/patients/pagination"
 import { PatientService } from "@/lib/services/patient.service"
 import type { Patient } from "@/lib/types/paciente"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { useToast, ToastContainer } from "@/components/ui/toast"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 
 export default function PacientesPage() {
   const router = useRouter()
+  const { toasts, success, error: showError, closeToast } = useToast()
   const [patients, setPatients] = useState<Patient[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,6 +26,9 @@ export default function PacientesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
   const [totalPatients, setTotalPatients] = useState(0)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
@@ -81,22 +89,43 @@ export default function PacientesPage() {
     router.push(`/pacientes/${patient.id}/editar`)
   }
 
-  const handleDelete = async (patient: Patient) => {
-    if (confirm(`¿Está seguro que desea eliminar a ${patient.firstName} ${patient.lastName}?`)) {
-      try {
-        const patientService = PatientService.getInstance()
-        await patientService.deletePatient(patient.id)
-        // Recargar la lista
-        await loadPatients()
-        await loadStats()
-      } catch (err) {
-        alert(err instanceof Error ? err.message : 'Error al eliminar paciente')
-      }
+  const handleDelete = (patient: Patient) => {
+    setPatientToDelete(patient)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!patientToDelete) return
+    
+    try {
+      setIsDeleting(true)
+      const patientService = PatientService.getInstance()
+      await patientService.deletePatient(patientToDelete.id)
+      
+      success(
+        'Paciente eliminado',
+        `${patientToDelete.firstName} ${patientToDelete.lastName} ha sido eliminado correctamente`
+      )
+      
+      setDeleteDialogOpen(false)
+      setPatientToDelete(null)
+      await loadPatients()
+      await loadStats()
+    } catch (err) {
+      showError(
+        'Error al eliminar',
+        err instanceof Error ? err.message : 'No se pudo eliminar el paciente'
+      )
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <ToastContainer toasts={toasts} onClose={closeToast} />
+      
+      <div className="space-y-6">
       {/* Header con gradiente */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 p-8 text-white shadow-xl">
         {/* Decoraciones de fondo */}
@@ -122,10 +151,23 @@ export default function PacientesPage() {
             <div className="flex flex-wrap gap-3">
               <Button 
                 onClick={() => router.push("/pacientes/crear")}
-                className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg"
+                className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
                 <UserPlus className="mr-2 h-5 w-5" />
                 Nuevo Paciente
+              </Button>
+              <Button 
+                onClick={() => {
+                  loadPatients()
+                  loadStats()
+                  success('Datos actualizados', 'La lista de pacientes se ha recargado')
+                }}
+                variant="outline"
+                className="border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm"
+                disabled={isLoading}
+              >
+                <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && "animate-spin")} />
+                Actualizar
               </Button>
               <Button 
                 variant="outline"
@@ -262,21 +304,60 @@ export default function PacientesPage() {
               <h3 className="font-semibold text-red-900">Error al cargar pacientes</h3>
               <p className="text-sm text-red-700 mt-1">{error}</p>
             </div>
-            <Button variant="outline" onClick={loadPatients} className="border-red-300 text-red-700">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                loadPatients()
+                loadStats()
+              }} 
+              className="border-red-300 text-red-700 hover:bg-red-50"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
               Reintentar
             </Button>
           </div>
         </Card>
       )}
 
-      {/* Estado de carga */}
+      {/* Estado de carga con skeleton */}
       {isLoading && (
-        <Card className="p-12">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Cargando pacientes...</p>
-          </div>
-        </Card>
+        <div className="space-y-4">
+          {viewMode === 'table' ? (
+            <Card className="p-6">
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <Skeleton className="h-6 w-1/2" />
+                      <Skeleton className="h-6 w-16" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-9 flex-1" />
+                      <Skeleton className="h-9 flex-1" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Mensaje cuando no hay resultados */}
@@ -353,6 +434,53 @@ export default function PacientesPage() {
           </div>
         </Card>
       )}
+
+      {/* Dialog de confirmación para eliminar */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>¿Eliminar paciente?</DialogTitle>
+            <DialogDescription>
+              {patientToDelete && (
+                <span>
+                  Esta acción eliminará permanentemente a{' '}
+                  <span className="font-semibold text-gray-900">
+                    {patientToDelete.firstName} {patientToDelete.lastName}
+                  </span>{' '}
+                  (DNI: {patientToDelete.documentId}). Esta acción no se puede deshacer.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setPatientToDelete(null)
+              }}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                'Eliminar'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+    </>
   )
 }
