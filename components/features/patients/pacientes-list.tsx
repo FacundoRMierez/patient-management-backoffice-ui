@@ -61,14 +61,14 @@ export function PacientesList({ patients, onEdit, onDelete }: PatientsListProps)
             {/* Info básica */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-gray-500">Edad:</span>
-                <span className="ml-1 font-medium">
+                <span className="text-gray-600">Edad:</span>
+                <span className="ml-1 font-medium text-gray-900">
                   {calculateAge(patient.birthDate)} años
                 </span>
               </div>
               <div>
-                <span className="text-gray-500">Tutor:</span>
-                <span className="ml-1 font-medium">
+                <span className="text-gray-600">Tutor:</span>
+                <span className="ml-1 font-medium text-gray-900">
                   Progenitor {patient.legalGuardian}
                 </span>
               </div>
@@ -76,13 +76,13 @@ export function PacientesList({ patients, onEdit, onDelete }: PatientsListProps)
 
             {/* Domicilio */}
             <div className="text-xs">
-              <p className="text-gray-500">Domicilio:</p>
+              <p className="text-gray-600 font-medium">Domicilio:</p>
               <p className="text-gray-900 break-words">{patient.address}</p>
             </div>
 
             {/* Contacto */}
             {patient.phone && (
-              <div className="flex items-center gap-2 text-xs text-gray-600">
+              <div className="flex items-center gap-2 text-xs text-gray-700">
                 <Phone className="h-4 w-4" />
                 <span>{patient.phone}</span>
               </div>
@@ -101,12 +101,12 @@ export function PacientesList({ patients, onEdit, onDelete }: PatientsListProps)
             {/* Escuela */}
             {patient.schoolData && (
               <div className="flex items-start gap-2 text-xs">
-                <GraduationCap className="h-3.5 w-3.5 text-gray-400 mt-0.5 shrink-0" />
+                <GraduationCap className="h-3.5 w-3.5 text-gray-500 mt-0.5 shrink-0" />
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900 truncate">
                     {patient.schoolData.schoolName}
                   </p>
-                  <p className="text-gray-500 text-xs">{patient.schoolData.grade}</p>
+                  <p className="text-gray-600 text-xs">{patient.schoolData.grade}</p>
                 </div>
               </div>
             )}
