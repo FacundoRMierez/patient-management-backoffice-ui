@@ -118,28 +118,31 @@ export function Wizard({
       {/* Footer */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0 rounded-lg border border-gray-200 bg-white p-4 sm:px-6 sm:py-4">
         <Button
-          variant="outline"
-          onClick={onPrev}
-          disabled={currentStep === 0}
+          variant="ghost"
+          onClick={onClose}
           className="order-2 sm:order-1"
         >
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Anterior</span>
-          <span className="sm:hidden">Atrás</span>
+          Cancelar
         </Button>
 
         <div className="flex gap-2 order-1 sm:order-2">
-          <Button variant="ghost" onClick={onClose} className="flex-1 sm:flex-none">
-            Cancelar
+          <Button
+            variant="outline"
+            onClick={onPrev}
+            disabled={currentStep === 0}
+          >
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Anterior</span>
+            <span className="sm:hidden">Atrás</span>
           </Button>
           {isLastStep ? (
-            <Button onClick={onSubmit} disabled={!isValid} className="flex-1 sm:flex-none">
+            <Button onClick={onSubmit} disabled={!isValid}>
               <Check className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">{submitLabel}</span>
               <span className="sm:hidden">Crear</span>
             </Button>
           ) : (
-            <Button onClick={onNext} disabled={!isValid} className="flex-1 sm:flex-none">
+            <Button onClick={onNext} disabled={!isValid}>
               <span className="hidden sm:inline">Siguiente</span>
               <span className="sm:hidden">Continuar</span>
               <ChevronRight className="ml-2 h-4 w-4" />

@@ -1,112 +1,97 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { UserPlus, Search, Users, UserCheck, Calendar, TrendingUp, Filter, Download, Grid3x3, List } from "lucide-react"
+import { UserPlus, Search, Users, UserCheck, Calendar, TrendingUp, Filter, Download, Grid3x3, List, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { PacientesTable } from "@/components/features/patients/pacientes-table"
 import { PacientesList } from "@/components/features/patients/pacientes-list"
 import { Pagination } from "@/components/features/patients/pagination"
+import { PatientService } from "@/lib/services/patient.service"
 import type { Patient } from "@/lib/types/paciente"
 
 export default function PacientesPage() {
   const router = useRouter()
-  const [patients, setPatients] = useState<Patient[]>([
-    {
-      id: "1",
-      documentId: "12345678",
-      firstName: "Juan",
-      lastName: "Pérez",
-      birthDate: new Date("2010-05-15"),
-      address: "Av. Corrientes 1234, CABA",
-      phone: "+54 9 11 1234-5678",
-      healthInsurance: {
-        hasInsurance: true,
-        name: "OSDE",
-        memberNumber: "123456789",
-      },
-      parentA: {
-        firstName: "María",
-        lastName: "Pérez",
-        documentId: "98765432",
-        phone: "+54 9 11 8765-4321",
-      },
-      legalGuardian: "A",
-      schoolData: {
-        schoolName: "Escuela Primaria N° 1",
-        location: "Av. Belgrano 500, CABA",
-        grade: "6° Grado",
-      },
-      registrationDate: new Date("2024-01-15"),
-      lastUpdate: new Date("2024-12-01"),
-      active: true,
-    },
-    {
-      id: "2",
-      documentId: "87654321",
-      firstName: "María",
-      lastName: "García",
-      birthDate: new Date("2012-08-20"),
-      address: "Calle Falsa 123, CABA",
-      healthInsurance: {
-        hasInsurance: false,
-      },
-      parentA: {
-        firstName: "Ana",
-        lastName: "García",
-        documentId: "45678912",
-        phone: "+54 9 11 4567-8912",
-      },
-      legalGuardian: "A",
-      registrationDate: new Date("2024-02-10"),
-      lastUpdate: new Date("2024-11-28"),
-      active: true,
-    },
-  ])
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [totalPatients, setTotalPatients] = useState(0)
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    withInsurance: 0,
+    insurancePercentage: 0,
+    thisMonth: 0,
+  })
   const pageSize = 10
 
-  // Calcular estadísticas
-  const stats = useMemo(() => {
-    const total = patients.length
-    const active = patients.filter(p => p.active).length
-    const withInsurance = patients.filter(p => p.healthInsurance.hasInsurance).length
-    const thisMonth = patients.filter(p => {
-      const registrationMonth = new Date(p.registrationDate).getMonth()
-      const currentMonth = new Date().getMonth()
-      return registrationMonth === currentMonth
-    }).length
+  // Cargar pacientes desde la API
+  useEffect(() => {
+    loadPatients()
+    loadStats()
+  }, [currentPage, searchTerm])
 
-    return {
-      total,
-      active,
-      withInsurance,
-      insurancePercentage: total > 0 ? Math.round((withInsurance / total) * 100) : 0,
-      thisMonth,
+  const loadPatients = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const patientService = PatientService.getInstance()
+      const response = await patientService.getPatients({
+        page: currentPage,
+        limit: pageSize,
+        search: searchTerm || undefined,
+      })
+      
+      setPatients(response.patients)
+      setTotalPatients(response.total)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar pacientes')
+    } finally {
+      setIsLoading(false)
     }
-  }, [patients])
+  }
 
-  const filteredPatients = patients.filter((p) =>
-    `${p.documentId}${p.firstName}${p.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const loadStats = async () => {
+    try {
+      const patientService = PatientService.getInstance()
+      const apiStats = await patientService.getStats()
+      
+      setStats({
+        total: apiStats.total || 0,
+        active: apiStats.active || 0,
+        withInsurance: apiStats.withInsurance || 0,
+        insurancePercentage: apiStats.total > 0 
+          ? Math.round((apiStats.withInsurance / apiStats.total) * 100) 
+          : 0,
+        thisMonth: apiStats.byStatus?.approved || 0,
+      })
+    } catch (err) {
+      console.error('Error loading stats:', err)
+    }
+  }
 
-  const totalPages = Math.ceil(filteredPatients.length / pageSize)
-  const paginatedPatients = filteredPatients.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  const totalPages = Math.ceil(totalPatients / pageSize)
 
   const handleEdit = (patient: Patient) => {
     router.push(`/pacientes/${patient.id}/editar`)
   }
 
-  const handleDelete = (patient: Patient) => {
+  const handleDelete = async (patient: Patient) => {
     if (confirm(`¿Está seguro que desea eliminar a ${patient.firstName} ${patient.lastName}?`)) {
-      setPatients(patients.filter(p => p.id !== patient.id))
+      try {
+        const patientService = PatientService.getInstance()
+        await patientService.deletePatient(patient.id)
+        // Recargar la lista
+        await loadPatients()
+        await loadStats()
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Error al eliminar paciente')
+      }
     }
   }
 
@@ -264,8 +249,38 @@ export default function PacientesPage() {
         </div>
       </Card>
 
+      {/* Estado de error */}
+      {error && (
+        <Card className="p-6 bg-red-50 border-red-200">
+          <div className="flex items-center space-x-3">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-900">Error al cargar pacientes</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+            </div>
+            <Button variant="outline" onClick={loadPatients} className="border-red-300 text-red-700">
+              Reintentar
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Estado de carga */}
+      {isLoading && (
+        <Card className="p-12">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Cargando pacientes...</p>
+          </div>
+        </Card>
+      )}
+
       {/* Mensaje cuando no hay resultados */}
-      {filteredPatients.length === 0 && searchTerm && (
+      {!isLoading && !error && patients?.length === 0 && searchTerm && (
         <Card className="p-12">
           <div className="text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -285,13 +300,13 @@ export default function PacientesPage() {
       )}
 
       {/* Contenido principal */}
-      {filteredPatients.length > 0 && (
+      {!isLoading && !error && patients && patients.length > 0 && (
         <>
           {/* Vista de tabla para desktop */}
           <div className={viewMode === 'table' ? 'block' : 'hidden md:block'}>
             <div className="hidden md:block">
               <PacientesTable
-                patients={paginatedPatients}
+                patients={patients}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />
@@ -301,7 +316,7 @@ export default function PacientesPage() {
           {/* Vista de cards para móvil o modo grid */}
           <div className={viewMode === 'grid' ? 'block' : 'block md:hidden'}>
             <PacientesList
-              patients={paginatedPatients}
+              patients={patients}
               onEdit={handleEdit}
               onDelete={handleDelete}
             />
@@ -312,14 +327,14 @@ export default function PacientesPage() {
             currentPage={currentPage}
             totalPages={totalPages}
             pageSize={pageSize}
-            total={filteredPatients.length}
+            total={totalPatients}
             onPageChange={setCurrentPage}
           />
         </>
       )}
 
       {/* Estado vacío */}
-      {patients.length === 0 && !searchTerm && (
+      {!isLoading && !error && (!patients || patients.length === 0) && !searchTerm && (
         <Card className="p-12">
           <div className="text-center">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">

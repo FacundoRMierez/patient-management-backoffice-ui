@@ -4,7 +4,8 @@ import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Breadcrumbs } from "@/components/ui/breadcrumbs"
 import { PatientWizard } from "@/components/features/patients/paciente-wizard"
-import type { PatientFormData, Patient } from "@/lib/types/paciente"
+import { PatientService } from "@/lib/services/patient.service"
+import type { PatientFormData } from "@/lib/types/paciente"
 
 export default function EditarPacientePage() {
   const router = useRouter()
@@ -12,96 +13,44 @@ export default function EditarPacientePage() {
   const patientId = params.id as string
   const [initialData, setInitialData] = useState<Partial<PatientFormData> | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    // TODO: Aquí irá la llamada a la API para obtener el paciente (GET)
-    // const response = await fetch(`/api/pacientes/${patientId}`)
-    // const patient: Patient = await response.json()
-    
-    // Simulación de datos del paciente (mock)
-    const mockPatient: Patient = {
-      id: patientId,
-      documentId: "12345678",
-      firstName: "Juan",
-      lastName: "Pérez",
-      birthDate: new Date("2010-05-15"),
-      address: "Av. Corrientes 1234, CABA",
-      phone: "+54 9 11 1234-5678",
-      healthInsurance: {
-        hasInsurance: true,
-        name: "OSDE",
-        memberNumber: "123456789",
-      },
-      parentA: {
-        firstName: "María",
-        lastName: "Pérez",
-        documentId: "98765432",
-        phone: "+54 9 11 8765-4321",
-      },
-      legalGuardian: "A",
-      schoolData: {
-        schoolName: "Escuela Primaria N° 1",
-        location: "Av. Belgrano 500, CABA",
-        grade: "6° Grado",
-      },
-      registrationDate: new Date("2024-01-15"),
-      lastUpdate: new Date("2024-12-01"),
-      active: true,
-    }
-
-    // Convertir Patient to PatientFormData
-    const formData: Partial<PatientFormData> = {
-      documentId: mockPatient.documentId,
-      firstName: mockPatient.firstName,
-      lastName: mockPatient.lastName,
-      birthDate: mockPatient.birthDate.toISOString().split('T')[0],
-      address: mockPatient.address,
-      phone: mockPatient.phone || '',
-      email: mockPatient.email || '',
-      
-      hasInsurance: mockPatient.healthInsurance.hasInsurance,
-      insuranceName: mockPatient.healthInsurance.name || '',
-      memberNumber: mockPatient.healthInsurance.memberNumber || '',
-      
-      parentA_firstName: mockPatient.parentA.firstName,
-      parentA_lastName: mockPatient.parentA.lastName,
-      parentA_documentId: mockPatient.parentA.documentId,
-      parentA_phone: mockPatient.parentA.phone,
-      parentA_email: mockPatient.parentA.email || '',
-      parentA_occupation: mockPatient.parentA.occupation || '',
-      
-      hasParentB: !!mockPatient.parentB,
-      parentB_firstName: mockPatient.parentB?.firstName || '',
-      parentB_lastName: mockPatient.parentB?.lastName || '',
-      parentB_documentId: mockPatient.parentB?.documentId || '',
-      parentB_phone: mockPatient.parentB?.phone || '',
-      parentB_email: mockPatient.parentB?.email || '',
-      parentB_occupation: mockPatient.parentB?.occupation || '',
-      
-      legalGuardian: mockPatient.legalGuardian,
-      
-      hasSchool: !!mockPatient.schoolData,
-      schoolName: mockPatient.schoolData?.schoolName || '',
-      schoolLocation: mockPatient.schoolData?.location || '',
-      grade: mockPatient.schoolData?.grade || '',
-      observations: mockPatient.schoolData?.observations || '',
-    }
-
-    setInitialData(formData)
-    setLoading(false)
+    loadPatient()
   }, [patientId])
 
-  const handleUpdatePatient = (formData: PatientFormData, mode: 'create' | 'edit') => {
-    console.log("Actualizar paciente:", patientId, formData)
-    
-    // TODO: Aquí irá la llamada a la API para actualizar el paciente (PUT)
-    // await fetch(`/api/pacientes/${patientId}`, { 
-    //   method: 'PUT', 
-    //   body: JSON.stringify(formData) 
-    // })
-    
-    // Redirigir a la lista de pacientes
-    router.push("/pacientes")
+  const loadPatient = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const patientService = PatientService.getInstance()
+      const patient = await patientService.getPatientById(patientId)
+      
+      // Convertir Patient de la API al formato del formulario
+      const formData = patientService.convertPatientToFormData(patient)
+      setInitialData(formData)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al cargar paciente')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdatePatient = async (formData: PatientFormData, mode: 'create' | 'edit') => {
+    try {
+      setIsSubmitting(true)
+      setError(null)
+      
+      const patientService = PatientService.getInstance()
+      await patientService.updatePatient(patientId, formData)
+      
+      // Redirigir a la lista de pacientes
+      router.push("/pacientes")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al actualizar paciente')
+      setIsSubmitting(false)
+    }
   }
 
   const handleCancel = () => {
@@ -135,6 +84,18 @@ export default function EditarPacientePage() {
           { label: "Editar Paciente" },
         ]}
       />
+      
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+      
       <PatientWizard
         mode="edit"
         initialData={initialData}
