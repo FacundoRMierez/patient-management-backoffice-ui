@@ -95,25 +95,15 @@ export function PatientWizard({
       case 2: // Parents
         if (!formData.parentA_firstName?.trim()) newErrors.parentA_firstName = "Required"
         if (!formData.parentA_lastName?.trim()) newErrors.parentA_lastName = "Required"
-        if (!formData.parentA_documentId?.trim()) newErrors.parentA_documentId = "Required"
-        if (!formData.parentA_phone?.trim()) newErrors.parentA_phone = "Required"
+        // DNI y teléfono son opcionales según la API
         break
 
       case 3: // School Data
-        if (formData.hasSchool) {
-          if (!formData.schoolName?.trim()) newErrors.schoolName = "Required"
-          if (!formData.schoolLocation?.trim()) newErrors.schoolLocation = "Required"
-          if (!formData.grade?.trim()) newErrors.grade = "Required"
-        }
+        // Todos los campos de escuela son opcionales
         break
 
       case 4: // Billing Data
-        if (formData.requiresInvoice) {
-          if (!formData.billingBusinessName?.trim()) newErrors.billingBusinessName = "Required"
-          if (!formData.billingTaxId?.trim()) newErrors.billingTaxId = "Required"
-          if (!formData.billingFiscalAddress?.trim()) newErrors.billingFiscalAddress = "Required"
-          if (!formData.billingFiscalCondition) newErrors.billingFiscalCondition = "Required"
-        }
+        // Todos los campos de facturación son opcionales
         break
     }
 

@@ -18,7 +18,9 @@ export function ParentsStep({ formData, onChange, errors }: ParentsStepProps) {
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="parentA_firstName">Nombre</Label>
+              <Label htmlFor="parentA_firstName">
+                Nombre <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="parentA_firstName"
                 type="text"
@@ -32,7 +34,9 @@ export function ParentsStep({ formData, onChange, errors }: ParentsStepProps) {
             </div>
 
             <div>
-              <Label htmlFor="parentA_lastName">Apellido</Label>
+              <Label htmlFor="parentA_lastName">
+                Apellido <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="parentA_lastName"
                 type="text"
@@ -48,36 +52,28 @@ export function ParentsStep({ formData, onChange, errors }: ParentsStepProps) {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="parentA_documentId">DNI</Label>
+              <Label htmlFor="parentA_documentId">DNI (opcional)</Label>
               <Input
                 id="parentA_documentId"
                 type="text"
                 value={formData.parentA_documentId || ""}
                 onChange={(e) => onChange("parentA_documentId", e.target.value)}
-                className={errors.parentA_documentId ? "border-red-500" : ""}
               />
-              {errors.parentA_documentId && (
-                <p className="mt-1 text-xs text-red-500">{errors.parentA_documentId}</p>
-              )}
             </div>
 
             <div>
-              <Label htmlFor="parentA_phone">Teléfono</Label>
+              <Label htmlFor="parentA_phone">Teléfono (opcional)</Label>
               <Input
                 id="parentA_phone"
                 type="tel"
                 value={formData.parentA_phone || ""}
                 onChange={(e) => onChange("parentA_phone", e.target.value)}
-                className={errors.parentA_phone ? "border-red-500" : ""}
               />
-              {errors.parentA_phone && (
-                <p className="mt-1 text-xs text-red-500">{errors.parentA_phone}</p>
-              )}
             </div>
           </div>
 
           <div>
-            <Label htmlFor="parentA_email">Email</Label>
+            <Label htmlFor="parentA_email">Email (opcional)</Label>
             <Input
               id="parentA_email"
               type="email"
@@ -87,7 +83,7 @@ export function ParentsStep({ formData, onChange, errors }: ParentsStepProps) {
           </div>
 
           <div>
-            <Label htmlFor="parentA_occupation">Ocupación</Label>
+            <Label htmlFor="parentA_occupation">Ocupación (opcional)</Label>
             <Input
               id="parentA_occupation"
               type="text"

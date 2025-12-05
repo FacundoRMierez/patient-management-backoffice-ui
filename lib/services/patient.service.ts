@@ -93,70 +93,86 @@ export class PatientService {
 
   // Convertir FormData del frontend al formato de la API
   private convertFormDataToRequest(formData: PatientFormData): CreatePatientRequest {
-    const guardians: CreatePatientRequest['guardians'] = [
-      {
-        type: 'A',
-        firstName: formData.parentA_firstName,
-        lastName: formData.parentA_lastName,
-        dni: formData.parentA_documentId,
-        phoneNumber: formData.parentA_phone,
-        email: formData.parentA_email,
-        occupation: formData.parentA_occupation,
-        isLegalGuardian: formData.legalGuardian === 'A' || formData.legalGuardian === 'both',
-      },
-    ]
+    // Crear guardian A (requerido)
+    const guardianA: any = {
+      type: 'A',
+      firstName: formData.parentA_firstName,
+      lastName: formData.parentA_lastName,
+      isLegalGuardian: formData.legalGuardian === 'A' || formData.legalGuardian === 'both',
+    }
+    
+    // Agregar campos opcionales solo si tienen valor
+    if (formData.parentA_documentId?.trim()) guardianA.dni = formData.parentA_documentId
+    if (formData.parentA_phone?.trim()) guardianA.phoneNumber = formData.parentA_phone
+    if (formData.parentA_email?.trim()) guardianA.email = formData.parentA_email
+    if (formData.parentA_occupation?.trim()) guardianA.occupation = formData.parentA_occupation
 
+    const guardians: CreatePatientRequest['guardians'] = [guardianA]
+
+    // Agregar guardian B si existe
     if (formData.hasParentB && formData.parentB_firstName) {
-      guardians.push({
+      const guardianB: any = {
         type: 'B',
         firstName: formData.parentB_firstName,
         lastName: formData.parentB_lastName!,
-        dni: formData.parentB_documentId!,
-        phoneNumber: formData.parentB_phone!,
-        email: formData.parentB_email,
-        occupation: formData.parentB_occupation,
         isLegalGuardian: formData.legalGuardian === 'B' || formData.legalGuardian === 'both',
-      })
+      }
+      
+      if (formData.parentB_documentId?.trim()) guardianB.dni = formData.parentB_documentId
+      if (formData.parentB_phone?.trim()) guardianB.phoneNumber = formData.parentB_phone
+      if (formData.parentB_email?.trim()) guardianB.email = formData.parentB_email
+      if (formData.parentB_occupation?.trim()) guardianB.occupation = formData.parentB_occupation
+      
+      guardians.push(guardianB)
     }
 
-    return {
+    const request: any = {
       dni: formData.documentId,
-      cut: formData.cut,
       firstName: formData.firstName,
       lastName: formData.lastName,
       dateOfBirth: formData.birthDate,
       address: formData.address,
-      phoneNumber: formData.phone,
-      email: formData.email,
-      
-      healthInsurance: {
-        hasInsurance: formData.hasInsurance || false,
+      guardians,
+    }
+
+    // Campos opcionales del paciente
+    if (formData.cut?.trim()) request.cut = formData.cut
+    if (formData.phone?.trim()) request.phoneNumber = formData.phone
+    if (formData.email?.trim()) request.email = formData.email
+
+    // Health insurance (opcional)
+    if (formData.hasInsurance) {
+      request.healthInsurance = {
+        hasInsurance: true,
         insuranceName: formData.insuranceName,
         affiliateNumber: formData.memberNumber,
-      },
-      
-      guardians,
-      legalGuardianType: formData.legalGuardian,
-      
-      schoolInfo: formData.hasSchool ? {
+      }
+    }
+
+    // School info (opcional)
+    if (formData.hasSchool && formData.schoolName?.trim()) {
+      request.schoolInfo = {
         attendsSchool: true,
         schoolName: formData.schoolName,
-        schoolAddress: formData.schoolLocation,
-        grade: formData.grade,
-        observations: formData.observations,
-      } : {
-        attendsSchool: false,
-      },
-      
-      billingInfo: {
-        requiresBilling: formData.requiresInvoice || false,
-        businessName: formData.requiresInvoice ? formData.billingBusinessName : undefined,
-        taxId: formData.requiresInvoice ? formData.billingTaxId : undefined,
-        taxCondition: formData.requiresInvoice ? formData.billingFiscalCondition : undefined,
-        fiscalAddress: formData.requiresInvoice ? formData.billingFiscalAddress : undefined,
-        billingEmail: formData.requiresInvoice ? formData.billingEmail : undefined,
-      },
+      }
+      if (formData.schoolLocation?.trim()) request.schoolInfo.schoolAddress = formData.schoolLocation
+      if (formData.grade?.trim()) request.schoolInfo.grade = formData.grade
+      if (formData.observations?.trim()) request.schoolInfo.observations = formData.observations
     }
+
+    // Billing info (opcional)
+    if (formData.requiresInvoice && formData.billingBusinessName?.trim()) {
+      request.billingInfo = {
+        requiresBilling: true,
+        businessName: formData.billingBusinessName,
+      }
+      if (formData.billingTaxId?.trim()) request.billingInfo.taxId = formData.billingTaxId
+      if (formData.billingFiscalCondition) request.billingInfo.taxCondition = formData.billingFiscalCondition
+      if (formData.billingFiscalAddress?.trim()) request.billingInfo.fiscalAddress = formData.billingFiscalAddress
+      if (formData.billingEmail?.trim()) request.billingInfo.billingEmail = formData.billingEmail
+    }
+
+    return request as CreatePatientRequest
   }
 
   // Convertir Patient de la API al formato del formulario
